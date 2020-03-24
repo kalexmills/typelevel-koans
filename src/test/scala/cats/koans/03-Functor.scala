@@ -16,7 +16,7 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
   describe("Functor Masters") {
 
     /**
-      * In a nutshell, a Functor describes how the types within a "container-type" can be transformed via
+      * In a nutshell, a Functor describes how the types within a "container" can be transformed via
       * an arbitrary function.
       */
     they("understand what it means to map over a container type") {
