@@ -6,10 +6,11 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.must.Matchers
 
 import Util._
+import org.scalatest.CancelAfterFailure
 
 // These Koans are meant to demystify some of the implementation details of cats, which can help with
 // debugging. It also introduces typeclasses as a concept.
-class TypeclassKoans extends AnyFunSpec with Matchers {
+class TypeclassKoans_02 extends AnyFunSpec with Matchers with CancelAfterFailure {
 
   /**
     * Cats provides a common interface for several general-purpose typeclasses used in pure functional

@@ -28,3 +28,6 @@ scalacOptions ++= Seq(
 libraryDependencies += compilerPlugin("org.typelevel" %% "kind-projector" % "0.11.0" cross CrossVersion.full)
 libraryDependencies += "org.typelevel" %% "cats-core" % "2.1.1"
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.1.1" % Test
+logBuffered in Test := false
+
+testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oKI")

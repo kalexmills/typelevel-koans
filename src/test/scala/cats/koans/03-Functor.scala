@@ -6,8 +6,9 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.must.Matchers
 
 import Util._
+import org.scalatest.CancelAfterFailure
 
-class FunctorKoans extends AnyFunSpec with Matchers {
+class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
 
   /**
     * The Functor typeclass is one of the most ubiquitous and useful typeclasses in functional programming.

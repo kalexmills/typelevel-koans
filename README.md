@@ -4,10 +4,28 @@ Koans focused on using key features of the typelevel stack. Sprinkled with some 
 
 #### Using this Repository
 
-To use this repository, clone or fork it and check out the classes under `src/test`. The tests written
-in each file are incomplete. To demonstrate your understanding of the material, read the comments and try
-to complete each test so that it passes. Any structure containing two or more underscores `__` are meant 
-to be replaced by the learner.
+To use this repository, clone or fork it and check out the classes under `src/test`. They are named in
+the order they should be attempted.
+
+The tests written in each file are failing. To gain further mastery along the path to enlightenment, read 
+the comments and complete each test so that it passes. Any structure containing two or more underscores 
+`__` are meant to be replaced by the learner.
+
+##### Helpful SBT Commands:
+
+Usually you only want to run the tests you're working on. To make this easy, the koan modules are numbered
+in increasing order, so you can run 
+```
+sbt:cats-koans> testOnly *01
+```
+to run all the tests in the first module. The tests are configured to be completed in order, so all
+tests after the first failure are discarded.
+
+
+Run all tests in this repository (not recommended usually)
+```
+sbt:cats-koans> test
+```
 
 #### Roadmap:
 

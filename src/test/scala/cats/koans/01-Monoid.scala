@@ -6,7 +6,9 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.must.Matchers
 
 import Util._
-class MonoidKoans extends AnyFunSpec with Matchers {
+import org.scalatest.CancelAfterFailure
+import org.scalatest.Sequential
+class MonoidKoans_01 extends AnyFunSpec with Matchers with CancelAfterFailure {
 
   /**
     * Cats is a library which defines a common interface for useful, general-purpose abstractions that
@@ -19,14 +21,14 @@ class MonoidKoans extends AnyFunSpec with Matchers {
 
     /**
       * Monoids in cats are defined by two operations:
-      *    combine[A](x: A, y: A): A
-      *    empty: A
+      *  def  combine[A](x: A, y: A): A
+      *  def  empty: A
       */
     they("can summon Monoids and use them directly") {
       // The default monoid for numbers peforms addition.
       val monoidForInt = Monoid[Int]
 
-      monoidForInt.combine(3, 4) mustEqual (7)
+      monoidForInt.combine(3, ___) mustEqual (7)
 
       monoidForInt.empty mustEqual (___[Int])
     }
@@ -64,13 +66,14 @@ class MonoidKoans extends AnyFunSpec with Matchers {
 
       "a" |+| "c" |+| "b" mustEqual (___[String])
     }
-    // The power of working with general constructs comes from the ability to re-use code based on
-    // generic trait bounds. The [A: Monoid] below indicates that the arguments can be any type which is a Monoid
-    def combineTuple[A: Monoid](tuple: (A, A, A)): A = {
-      ___[A]
-    }
 
     they("understand trait constraints on generic type arguments") {
+      // The power of working with general constructs comes from the ability to re-use code based on
+      // generic trait bounds. The [A: Monoid] below indicates that the arguments can be any type which is
+      // a Monoid.
+      def combineTuple[A: Monoid](tuple: (A, A, A)): A = {
+        ___[A]
+      }
 
       combineTuple((1, 2, 3)) mustEqual (6)
       combineTuple(("a", "b", "c")) mustEqual ("abc")
@@ -104,7 +107,7 @@ class MonoidKoans extends AnyFunSpec with Matchers {
     }
 
     // implement a Monoid for strings which reverses the string as part of the combine operation.
-    val reversingMonoidForString: Monoid[String] = ___
+    lazy val reversingMonoidForString: Monoid[String] = ___
 
     they("are able to write their own Monoids when needed") {
 
