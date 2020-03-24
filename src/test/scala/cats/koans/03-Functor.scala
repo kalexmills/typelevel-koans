@@ -55,8 +55,8 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * For most container types, an implementation of map is already defined by the standard library. However
-      * the cats implementation provides a unified interface and integrates nicely with other typeclasses.
+      * When implementing your own Functor, you only have to implement map. Cats will then use your map implementation
+      * to provide several other useful combinators.
       */
     they("know that additional combinators are provided 'for free' by the cats library") {
       // fproduct preserves the argument of the map
@@ -64,12 +64,13 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
         .fproduct(___) mustBe (List((1, "1"), (2, "2"), (3, "3")))
 
       // unzip breaks apart a Functor of pairs into a pair of Functors.
-      Functor[List]
-        .unzip(List((1, 2), (3, 4), (5, 6))) mustBe (List(1, 3, 5), ___)
+      List((1, 2), (3, 4), (5, 6)).unzip mustBe (List(1, 3, 5), ___)
 
       sealed trait Animal
       case class Dog(color: String) extends Animal
 
+      // widen can be used to safely downcast the argument inside a functor (at compile-time!)
+      List(Dog("red"), Dog("blue"), Dog("yellow")).widen[Animal] mustBe a[Animal]
     }
 
     /**
