@@ -9,6 +9,7 @@ import Util._
 import java.{util => ju}
 import java.nio.charset.CharsetDecoder
 import java.nio.charset.Charset
+import cats.syntax.`package`.flatMap
 
 /**
   * Monads have a reputation for being scary, but they're just Functors with some extra (very powerful) stuff.
@@ -101,11 +102,27 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       divideExcitingNumbers("3!", "0!") mustBe (None) // no division by zero, even if it's exciting!
     }
 
+    // fake user "database" for a the ollowing koans
+    val userIds        = Map("Alex" -> 1, "Ryan"                 -> 2, "Denver"       -> 3, "Broken_User" -> 4)
+    val passwordHashes = Map(1      -> "YmVzdC1wYXNzd29yZCEK", 2 -> "YWJjMTIzCg==", 3 -> "bDMzdGhheG9yCg==")
+    def hash(plaintext: String) =
+      new String(ju.Base64.getEncoder().encode(plaintext.getBytes())) // somewhat less than secure
+
     /**
       *   when F[_]: Either[B, _]      the complication is that the value of the type might actually be a value of type B
       */
     they("understand how to use the Either monad to handle the effect of mutually exclusive values of different types") {
-      /* UNDER CONSTRUCTION */
+      def passwordIsCorrect(username: String, plaintext: String): Either[String, Boolean] =
+        Either
+          .right(username)
+          .flatMap(username => ___) // retrieve uid or Left("no_uid")
+          .flatMap(uid => ___)      // retrieve ciphertext or Left("no_pwd")
+          .map(ciphertext => ___)   // compare ciphertext to plaintext
+
+      passwordIsCorrect("Alex", "best-password!") mustBe (Right(true))
+      passwordIsCorrect("Ryan", "super-secret-password") mustBe (Right(false))
+      passwordIsCorrect("Broken_User", "roflmao") mustBe (Left("no_pwd"))
+      passwordIsCorrect("Anonymous", "we_are_legion") mustBe (Left("no_uid"))
     }
 
     /**
@@ -147,27 +164,18 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * To make reading large chains of easier, Scala provides the for-yield construct, which is syntactic sugar for a sequence of flatMaps.
+      * To make reading large chains of flatMaps more pleasant easier, Scala provides the for-yield construct, which is syntactic sugar for a sequence of flatMaps.
       */
     they("understand that for-yield constructs are just syntactic sugar for a sequence of flatMap operations") {
-      val userIds        = Map("Alex" -> 1, "Ryan"                 -> 2, "Denver"       -> 3, "Broken_User" -> 4)
-      val passwordHashes = Map(1      -> "YmVzdC1wYXNzd29yZCEK", 2 -> "YWJjMTIzCg==", 3 -> "bDMzdGhheG9yCg==")
-      def hash(plaintext: String) =
-        new String(ju.Base64.getEncoder().encode(plaintext.getBytes())) // somewhat less than secure
-
       def passwordIsCorrect(username: String, plaintext: String): Either[String, Boolean] =
-        Either
-          .right(username)
-          .flatMap(username => ___) // retrieve uid or Left("no_uid")
-          .flatMap(uid => ___)      // retrieve ciphertext or Left("no_pwd")
-          .map(ciphertext => ___)   // compare ciphertext to plaintext
+        ___ // copy answer from koan above
 
       // forComp implements the same program as passwordIsCorrect. Notice how the variable names line up with the stubbed out version above.
       def forComp(username: String, plaintext: String) =
         for {
           username   <- Either.right(username)
-          uid        <- Either.fromOption(userIds.get(username), "no_uid")
-          ciphertext <- Either.fromOption(passwordHashes.get(uid), "no_pwd")
+          uid        <- ___[Either[String, Int]] // retrieve uid or Left("no_uid")
+          ciphertext <- ___[Either[String, String]] // retrieve ciphertext or Left("no_pwd")
         } yield hash(plaintext) == ciphertext
 
       passwordIsCorrect("Alex", "best-password!") mustBe (forComp("Alex", "best-password!"))
@@ -297,6 +305,46 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
 
       functorForAnyMonad[Option].map(Some(a))(f compose g) mustBe (functorForAnyMonad[Option]
         .map(functorForAnyMonad[Option].map(Some(a))(f))(g))
+    }
+
+    they("appreciate the additional combinators implemented on Monads for 'free'") {
+      // flatten can be used to flatten nested monads.
+      Monad[Option].flatten(Some(Some(1))) mustBe (___)
+      Monad[Option].flatten(Some(None)) mustBe (___)
+      Monad[List].flatten(List(List(1, 2, 3), List(0), List(3, 4))) mustBe (___)
+
+      // product maintains the monad structure while lifting two values into a tuple
+      Monad[Option].product(Some(1), Some(2)) mustBe (___)
+      Monad[Option].product(Some(3), None) mustBe (___)
+
+      // mproduct can be used to pair the value with the output of a Kleisli arrow.
+      Monad[Option].mproduct(Some(1))(x => if (x > 0) Some(x) else None) mustBe (___)
+      Monad[List].mproduct(List(1, 2, 3))(x => List(x, x + 5)) mustBe (___)
+    }
+
+    /**
+      * Because every Monad is a Functor, Monads compose with Functors. The result is not a Monad, though, it's just a Functor.
+      * if F[_] is a monad, and G[_] is a functor, then F[G[_]] is also a Functor.
+      *
+      * Monads do not compose with Monads in general. Monads do compose with Monad Transformers which we'll see later.
+      */
+    they("understand that Monads compose with Functors") {}
+
+    /**
+      * For some types, it makes sense to have a flatMap, but there's no good way to implement pure.
+      */
+    they("understand that FlatMap is a weaker version of the Monad typeclass") {
+      // the FlatMap typeclass from the cats library is similar
+      trait SimpleFlatMap[F[_]] {
+        def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
+        def map[A, B](fa: F[A])(f: A => B): F[B] // you have to provide map, since we don't have a pure, we can't define it for you.
+      }
+
+      // we can implement FlatMap for Map[K, *].
+      def flatMapForMap[K]: SimpleFlatMap[Map[K, *]] = ___
+
+      flatMapForMap[Int].map(Map(1     -> 2, 3 -> 4))(_ + 1) mustBe (Map(1 -> 3, 3 -> 5))
+      flatMapForMap[Int].flatMap(Map(1 -> 2, 3 -> 4))(x => Map(x - 1 -> (x + 1))) mustBe (Map(0 -> 3, 2 -> 5))
     }
 
     they(

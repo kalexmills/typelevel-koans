@@ -176,7 +176,7 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
     they("understand that there's more than one way to Functor a function") {
       // When the hole is in the argument, there's another way to write a Functor for function.
       // Since a function is a first-class type in Scala, there's no reason we can't have a functor for it.
-      implicit def functorForFunction[C]: Functor[* => C] = // TODO: is this lawful?
+      implicit def functorForFunction[C]: Functor[* => C] =
         new Functor[* => C] { // * => C is a function type with a hole
           def map[A, B](fa: A => C)(f: A => B): B => C = ___
         }
