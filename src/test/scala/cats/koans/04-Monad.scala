@@ -7,9 +7,6 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.CancelAfterFailure
 import Util._
 import java.{util => ju}
-import java.nio.charset.CharsetDecoder
-import java.nio.charset.Charset
-import cats.syntax.`package`.flatMap
 
 /**
   * Monads have a reputation for being scary, but they're just Functors with some extra (very powerful) stuff.
@@ -98,11 +95,11 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
           .flatMap(___)
 
       divideExcitingNumbers("16!!!", "4!") mustBe (Some(4.0))
-      divideExcitingNumbers("3", "1") mustBe (None)   // only exciting numbers allowed!
-      divideExcitingNumbers("3!", "0!") mustBe (None) // no division by zero, even if it's exciting!
+      divideExcitingNumbers("3", "fish") mustBe (None) // only exciting numbers allowed!
+      divideExcitingNumbers("3!", "0!") mustBe (None)  // no division by zero, even if it's exciting!
     }
 
-    // fake user "database" for a the ollowing koans
+    // fake user "database" for a the following koans
     val userIds        = Map("Alex" -> 1, "Ryan"                 -> 2, "Denver"       -> 3, "Broken_User" -> 4)
     val passwordHashes = Map(1      -> "YmVzdC1wYXNzd29yZCEK", 2 -> "YWJjMTIzCg==", 3 -> "bDMzdGhheG9yCg==")
     def hash(plaintext: String) =
@@ -164,7 +161,7 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * To make reading large chains of flatMaps more pleasant easier, Scala provides the for-yield construct, which is syntactic sugar for a sequence of flatMaps.
+      * To make reading large chains of flatMaps more pleasant, Scala provides the for-yield construct, which is syntactic sugar for a sequence of flatMaps.
       */
     they("understand that for-yield constructs are just syntactic sugar for a sequence of flatMap operations") {
       def passwordIsCorrect(username: String, plaintext: String): Either[String, Boolean] =
@@ -185,7 +182,7 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * The most useful part of the Monad is the flatMap, but to have a Monad, we also need another function called pure.
+      * The most useful piece of the Monad is flatMap, but to have a Monad, we also need another function called pure.
       */
     they("know how pure works to lift values into Monadic contexts") {
       // cats provides a few ways to invoke pure.
@@ -275,7 +272,7 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       * To prove every Monad is a Functor, we just need to provide a lawful instance of Functor[F[_]] for every instance of a Monad[F[_]].
       */
     they("know that every Monad is a Functor") {
-      trait SimpleMonad[F[_]] { // same typeclass from before.
+      trait SimpleMonad[F[_]] { // same typeclass from before (sans map)
         def pure[A](a: A): F[A]
         def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
       }
@@ -328,7 +325,16 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       *
       * Monads do not compose with Monads in general. Monads do compose with Monad Transformers which we'll see later.
       */
-    they("understand that Monads compose with Functors") {}
+    they("understand that Monad composition does not work in general") {
+      // think about how you might complete the definition for flatMap below.
+      def flatMap[F[_]: Monad, G[_]: Monad, A, B](fa: F[G[A]])(f: A => F[G[B]]): F[G[B]] = {
+        ___ // no implementation is possible, but you should give it a shot anyway.
+      }
+
+      flatMap(List(Some(1), Some(2)).widen[Option[Int]])(x => List(Some(x), None)) mustBe
+        (List(Some(1), None, Some(2), None))
+      // comment out the assertion to pass the koan
+    }
 
     /**
       * For some types, it makes sense to have a flatMap, but there's no good way to implement pure.
@@ -349,6 +355,6 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
 
     they(
       "know that the cats library requires Monads to implement an additional function, tailRecM for stack-safe recursion"
-    ) {}
+    ) { /* UNDER CONSTRUCTION */ }
   }
 }

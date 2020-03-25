@@ -33,6 +33,8 @@ class TypeclassKoans_02 extends AnyFunSpec with Matchers with CancelAfterFailure
         def empty: A               // empty extends the behavior of A by providing a left and right identity for combine.
       }
 
+      // We will often create simpler version of typeclasses from cats
+
       // the typeclasses required for a type are described as type bounds on generic arguments
       def combineAll[A: SimpleMonoid](list: List[A]): A = {
         // within the body of implementations, an instance of the typeclass can be summoned usingly `implicitly`.
