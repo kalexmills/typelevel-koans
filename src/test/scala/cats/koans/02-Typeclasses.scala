@@ -9,7 +9,7 @@ import Util._
 import org.scalatest.CancelAfterFailure
 
 // These Koans are meant to demystify some of the implementation details of cats, which can help with
-// debugging. It also introduces typeclasses as a concept.
+// debugging. They also introduce typeclasses as a concept.
 class TypeclassKoans_02 extends AnyFunSpec with Matchers with CancelAfterFailure {
 
   /**
@@ -24,24 +24,23 @@ class TypeclassKoans_02 extends AnyFunSpec with Matchers with CancelAfterFailure
       * arguments.
       *
       * In Scala, Typeclasses are implemented as implicit traits with one or more generic parameters.
-      * We think of the defs on the trait as extending the behavior of the types
+      * We think of the defs on the trait as extending the behavior of the types in the arguments.
       */
-    they("understand how typeclasses are implemented and used") {
+    they("understand how typeclasses are implemented and used in Scala") {
       // A simplified definition of the Monoid typeclass is below.
       trait SimpleMonoid[A] {
-        def combine(x: A, y: A): A // combine extends the behavior of type A by providing an associative operation
-        def empty: A               // empty extends the behavior of type A by providing a left and right identity for combine.
+        def combine(x: A, y: A): A // combine extends the behavior of A by providing an associative operation
+        def empty: A               // empty extends the behavior of A by providing a left and right identity for combine.
       }
 
       // the typeclasses required for a type are described as type bounds on generic arguments
       def combineAll[A: SimpleMonoid](list: List[A]): A = {
-        // within the body of implementations, an instance of the typeclass can be summoned.
+        // within the body of implementations, an instance of the typeclass can be summoned usingly `implicitly`.
         val summonedInstance = implicitly[SimpleMonoid[A]]
         list.fold(summonedInstance.empty)(summonedInstance.combine)
       }
 
       // at the callsite, an implicit instance of SimpleMonoid[A] must be available
-
       implicit val monoidForString: SimpleMonoid[String] = ___
 
       combineAll(List("a", "b", "c")) mustBe ("abc")
@@ -58,8 +57,8 @@ class TypeclassKoans_02 extends AnyFunSpec with Matchers with CancelAfterFailure
       ___ // TODO: add an appropriate 'reverseIt' method (named to avoid collision with 'reverse')
     }
 
-    // TODO: add your own implementation of the Reversable typeclass here.
-    implicit val reversableForString: Reversable[String] = ___
+    // TODO: add your own implementation of the Reversable typeclass (replace the null).
+    implicit val reversableForString: Reversable[String] = null
 
     they("can define and use their own typeclasses") {
       // implicitly[Reversable[String]].reverseIt("asdf") mustBe ("fdsa")
@@ -73,14 +72,15 @@ class TypeclassKoans_02 extends AnyFunSpec with Matchers with CancelAfterFailure
     }
 
     they("know how to invoke a summoner for a typeclass") {
-      ___ mustBe a[Reversable[String]]
+      ___ mustBe a[Reversable[_]]
     }
 
-    // cats also provides its Syntactic sugar via implicit type conversions and a special Ops class. This is
-    // more generally known as the "Pimp My Library" pattern.
+    // cats also provides its Syntactic sugar via implicit type conversions and a wrapper class, usually
+    // suffixed with 'Ops'. This is more generally known as the "Pimp My Library" pattern.
     implicit class ReversableOps[A: Reversable](a: A) {
-      def reverseIt[A] = ___ // TODO: reverse a
+      def reverseIt[A] = ___
     }
+
     they("know how to avoid summoning entirely by implicitly converting to an Ops instance") {
       // "123456".reverseIt shouldBe ("654321")
       fail("Uncomment the above method and ensure the test passes")
