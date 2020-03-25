@@ -6,6 +6,9 @@ import org.scalatest.funspec.AnyFunSpec
 import org.scalatest.matchers.must.Matchers
 import org.scalatest.CancelAfterFailure
 import Util._
+import java.{util => ju}
+import java.nio.charset.CharsetDecoder
+import java.nio.charset.Charset
 
 /**
   * Monads have a reputation for being scary, but they're just Functors with some extra (very powerful) stuff.
@@ -15,7 +18,7 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
   describe("Monad Masters") {
 
     /**
-      * Function composition is how functional-programmers get things done. Unfortunately, vanilla function
+      * Composing functions is how functional programmers get things done. Unfortunately, vanilla function
       * composition isn't as helpful as we would like.
       */
     they("appreciate the limits of function composition") {
@@ -27,11 +30,11 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
           .map(___)                       // convert y to a Left("div0") if y is zero
           .map((safeY: Int) => x / safeY) // divide x by y
 
-      // Unforunately, it is not possible to complete the definition of the function being mapped over above.
+      // It is not possible to provide a function to map handles the conversion in the comment.
 
-      // The function we're trying to use to get the job done is not powerful enough to complete the task. In this chain,
-      // the type signature of map requires Int => Int. But we need some way to map Int => Either[String, Int] in the middle
-      // of our composition chain so we can handle the additional complication of the input possibly being zero.
+      // The type signature of map requires Int => Int, but a function of this type is not powerful enough to get the job done.
+      // We need some way to map over functions like Int => Either[String, Int] to handle the additional complication of the
+      // input possibly being zero.
       //
       // Once we've learned how to do this, we want to capture the knowledge in a typeclass so we can use the same behavior over
       // and over. That typeclass is called a Monad.
@@ -42,23 +45,28 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * As functional programmers, we want to be able to compose pure functions so we have the compiler catch as
-      * many of our errors as possible. As we've seen above, that's not possible using only Functor.
+      * Using pure functions shifts some of the burden of catching errors onto the compiler. As we've seen above, that's not always
+      * possible using only the powers provided by Functor.
       *
-      * We need a typeclass which knows how to compose functions that do the same thing as map, but also have the
-      * ability to handle extra complications. Since we want things to be general, we will do everything we can to
-      * leave those 'extra complications' as general as possible. So if A is a type, we'll let F[A] be the type A,
-      * which is wrapped up in some extra complication denoted by F[_]. Also, 'complication' is too many syllables,
-      * so we just call F[_] an 'effect'. Think of F[A] as a way to wrap up some extra complication involved in
-      * retrieving a value of type A.
+      * We need a typeclass which knows how to compose functions like map, but also have the ability to handle some extra
+      * complications. Since we want the typeclass to be general, we will leave those 'extra complications' as general as possible.
+      * We'll refer to these complications as 'effects'.
       *
-      * Our goal for the Monad typeclass is to compose functions and handle these effects.
+      *   If A is a type, we'll let F[A] be the type A, wrapped up in an effect by F[_].
       *
-      * .map lets us compose functions which look like A => B. Specifically, we can take A => B and compose it with
+      * Think of F[A] as a way to encode some extra complication involved in retrieving a value of type A.
+      *
+      *   when F[_] = Option[_]     the complication is that the value in the type might or might not be there
+      *   when F[_] = Either[B, _]  the complication is that the value of the type might actually be a value of type B
+      *   when F[_] = List[_]       the complication is that there might be zero or zillions of values for the type.
+      *
+      * Our goal for the Monad typeclass is to compose functions of the form  A => F[B] which return values wrapped up in an effect.
+      * Functions that look like this are called Kleisli arrows.
+      *
+      * The Functor typeclass lets us compose functions which look like A => B. Specifically, we can take A => B and compose it with
       * B => C to get A => C. Functor encapsulates how to do for all the values inside an effect F[_] by using map.
       *
-      * What we want is a new combinator that lets us compose functions while also handling some complication. We want
-      * to be able to compose things that are almost functions called 'Kleisli arrows'.
+      * What we want is a new combinator that lets us compose functions A => F[B] and B => F[C] to get a function A => F[C].
       *
       * Specifically, we want to compose A => F[B] with B => F[C] and end up with a function A => F[C]. Monads let us
       * do that for an effect by using flatMap.
@@ -112,7 +120,8 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * Other more complicated (and therefore more useful) effects are covered in other modules. They are all built around Monads and other typeclasses.
+      * Other more complicated (and therefore more useful) Monadic effects are covered in other modules. They are all built around
+      * Monads and other typeclasses.
       *
       *   when F[_] = Eval[_]      the complication is that the value might be computed lazily.
       *   when F[_] = Future[_]    the complication is that you might have to wait to get your value (and lots can go wrong)
@@ -120,10 +129,9 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       *   when F[_] = Writer[_]    the complication is that the computation is carrying along an additional value being written to (e.g. logs).
       *   when F[_] = IO[_]        the complication is that to get your value, you have to run an arbitrarily complex program which may
       *                            involve concurrency, system-level calls, and potential interaction with other systems.
-      *
-      *
-      * There's more than one way to understand flatMap; It turns out that flatMap can be defined as the composition of
-      * two other combinators, map and flatten.
+      */
+    /**
+      * flatMap can be defined as the composition of two other combinators, map and flatten.
       */
     they("know that flatMap can be implemented in terms of map and flatten") {
       def flattenOption[A](oa: Option[Option[A]]): Option[A] = ___
@@ -138,8 +146,34 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       flattenOption(Some(-3).map(arrow)) mustBe (Some(-3)).flatMap(arrow)
     }
 
+    /**
+      * To make reading large chains of easier, Scala provides the for-yield construct, which is syntactic sugar for a sequence of flatMaps.
+      */
     they("understand that for-yield constructs are just syntactic sugar for a sequence of flatMap operations") {
-      /* UNDER CONSTRUCTION */
+      val userIds        = Map("Alex" -> 1, "Ryan"                 -> 2, "Denver"       -> 3, "Broken_User" -> 4)
+      val passwordHashes = Map(1      -> "YmVzdC1wYXNzd29yZCEK", 2 -> "YWJjMTIzCg==", 3 -> "bDMzdGhheG9yCg==")
+      def hash(plaintext: String) =
+        new String(ju.Base64.getEncoder().encode(plaintext.getBytes())) // somewhat less than secure
+
+      def passwordIsCorrect(username: String, plaintext: String): Either[String, Boolean] =
+        Either
+          .right(username)
+          .flatMap(username => ___) // retrieve uid or Left("no_uid")
+          .flatMap(uid => ___)      // retrieve ciphertext or Left("no_pwd")
+          .map(ciphertext => ___)   // compare ciphertext to plaintext
+
+      // forComp implements the same program as passwordIsCorrect. Notice how the variable names line up with the stubbed out version above.
+      def forComp(username: String, plaintext: String) =
+        for {
+          username   <- Either.right(username)
+          uid        <- Either.fromOption(userIds.get(username), "no_uid")
+          ciphertext <- Either.fromOption(passwordHashes.get(uid), "no_pwd")
+        } yield hash(plaintext) == ciphertext
+
+      passwordIsCorrect("Alex", "best-password!") mustBe (forComp("Alex", "best-password!"))
+      passwordIsCorrect("Ryan", "super-secret-password") mustBe (forComp("Ryan", "super-secret-password"))
+      passwordIsCorrect("Broken_User", "roflmao") mustBe (forComp("Broken_User", "roflmao"))
+      passwordIsCorrect("Anonymous", "we_are_legion") mustBe (forComp("Anonymous", "we_are_legion"))
     }
 
     /**
@@ -174,8 +208,8 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
         def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
       }
 
-      // To implement the monad, don't focus on the laws below. Just make sure the types line-up. Every Monad has to satisfy
-      // the laws but for simple monads there's really only one way to get it right.
+      // Every Monad has to satisfy the laws but for simple monads there's really only one way to get it right. Focus on making
+      // the types line up.
       val monadForOption: SimpleMonad[Option] = new SimpleMonad[Option] {
         def pure[A](a: A): Option[A]                                   = ___
         def flatMap[A, B](fa: Option[A])(f: A => Option[B]): Option[B] = ___
@@ -208,8 +242,8 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * Typeclasses are all about getting extra functionality for cheap. One example of this is the fact that every Monad
-      * is a Functor.
+      * One example about getting functionality for cheap is the fact that a lawful map operation can be implemented using only flatMap and pure.
+      * By implementing the Monad, we get a Functor 'for-free'.
       */
     they("know that map can be implemented in terms of flatMap and pure") {
       trait SimpleMonad[F[_]] { // same typeclass from before.
@@ -225,7 +259,8 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
         def flatMap[A, B](fa: Option[A])(f: A => Option[B]): Option[B] = ___
       }
 
-      // TODO: tests
+      monadForOption.map(Some(1))(x => (x + 12) + "!") mustBe (Some("13!"))
+      monadForOption.map(None)(_ => throw new RuntimeException("should never be executed")) mustBe (None)
     }
 
     /**
@@ -247,6 +282,9 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       }
 
       val monadForOption: SimpleMonad[Option] = ___ // TODO: copy your lawful monad from above.
+
+      functorForAnyMonad[Option].map(Some(1))(x => (x + 12) + "!") mustBe (Some("13!"))
+      functorForAnyMonad[Option].map(None)(_ => throw new RuntimeException("should never be executed")) mustBe (None)
     }
 
     they(

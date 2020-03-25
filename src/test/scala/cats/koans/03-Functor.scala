@@ -29,13 +29,14 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
       l.map(___) mustBe (List(10, 20, 30, 40, 50))
     }
 
-    // From another point of view, a Functor describes how to chain together small functions on a container via
-    // composition. Said another way, it allows you to thread function composition through a type.
-    they("can use map to chain together multiple operations in a sequence") {
+    // From another point of view, a Functor describes how to compose small functions and apply them to values
+    // inside a container via composition. Said another way, it allows you to thread function composition through a type.
+    they("can use map to compose multiple functions acting on values in a Functor") {
       List(1, 2, 3, 4, 5)
-        .map(___)
-        .map(_.toString)
-        .map(___) mustBe (List("111!", "222!", "333!", "444!", "555!"))
+        .map(___)        // do something
+        .map(___)        // convert to string
+        .map(___) mustBe // do something else
+        (List("111!", "222!", "333!", "444!", "555!"))
     }
 
     // The power of Functors comes from how general they are. Functors exist on many types.
@@ -44,12 +45,13 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
         y.toIntOption
           .map(___)
 
-      List("0", "1", "2", "3").map(___) mustBe (List(None, Right(1), Right(0.5), Right(1 / 3)))
+      List("0", "1", "2", "3").map(___) mustBe // use 'divide' from above
+        (List(None, Right(1), Right(0.5), Right(1 / 3)))
     }
 
     they("understand that Eithers are a functor") {
       def multiply(x: String, y: Int): Either[String, String] =
-        // by convention, .map applies to the argument on the right.
+        // by convention, .map applies to the argument on the right of the Either.
         Either
           .fromOption(x.toIntOption, "notnum")
           .map(___)
@@ -59,12 +61,12 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * When implementing your own Functor, you only have to implement map. Cats will then use your map implementation
-      * to provide several other useful combinators.
+      * The beauty of coding with Typeclasses is we get lots of functions for cheap, tested once, and implemented the same way.
       *
-      * This is actually the beauty of coding with Typeclasses: we get lots of functions for free, tested once, and implemented the same way.
+      * When implementing your own Functor, you only have to provide map. Cats provides several other useful combinators based on
+      * your map implementation.
       */
-    they("know that additional combinators are provided 'for free' by the cats library") {
+    they("know that additional combinators are provided 'for cheap' by the cats library") {
       // fproduct preserves the argument of the map
       List(1, 2, 3)
         .fproduct(___) mustBe (List((1, "1"), (2, "2"), (3, "3")))
@@ -80,14 +82,13 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * The Functor typeclass is unlike the Monoid and Semigroup typeclasses we've seen before. Monoid and
-      * Semigroup take a type with zero unbound generic arguments as parameters, whereas Functor takes a type with
-      * one unbound type argument. These types are called 'types with a hole' or 'higher-kinded' types. The "hole"
-      * we are talking about is an unbound type parameter.
+      * The Functor typeclass is unlike the Monoid and Semigroup typeclasses because the generic argument to the typeclass
+      * takes an argument F[_] which stands in for a type with one unbound type argument. Examples are F[_] = List[_], or
+      * F[_] = Option[_]. These types are called 'types with a hole' or 'higher-kinded' types.
       */
     they("can recognize the presence of higher-kinded types") {
       type F[A] = List[A]              // F is a higher-kinded type with one hole.
-      type G[A] = Either[String, F[A]] // Either is a higher-kinded type with two holes. Filling one of the holes with string yields a type with one hole.
+      type G[A] = Either[String, F[A]] // Either is a higher-kinded type with two holes. Filling one of the holes with String yields a type with one hole.
 
       // Unwrapping the type aliases
       def converter[A](x: G[A]): Either[String, List[A]] = ___
@@ -96,7 +97,7 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
       converter(Left("nope")) mustBe (Left("nope"))
     }
 
-    // F[_]: Functor is any higher kinded type with one hole for which there is an implicit Functor[F] in scope.
+    // 'F[_]: Functor' in the def below describes a type F[_] for which there is an implicit Functor[F] in scope *at the call site*.
     def functorWrapSome[A, F[_]: Functor](x: F[A]): F[Option[A]] = ___
 
     /**
@@ -107,23 +108,23 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * Functors compose. That is, if types F[_] and G[_] are both Functors, type F[G[_]] will also be a Functor.
-      * Practically speaking, this means that one invocation of map can "unwrap" multiple layers in a functor stack
+      * If types F[_] and G[_] are both Functors, type F[G[_]] will also be a Functor. More tersely, "Functors compose".
       */
-    they("know that functors compose") {
+    they("know how to use the fact that functors compose") {
       val listOption: List[Option[Int]] = List(Some(1), None, Some(4), None)
 
+      // One invocation of map can "unwrap" multiple layers in a functor stack.
       listOption.map(___) mustBe Some(List(Some("1!"), None, Some("4!"), None))
     }
 
     /**
-      * Functor implementations must follow the Functor laws.
+      * You can implement Functor for new types, but all implementations must follow the Functor laws.
       */
     they("can implement their own lawful Functor typeclasses for new types") {
-      // Implement a functor for (A, B, C), like Either, it should be right-biased.
+      // Implement a functor for tuples (A, B, C), like Either, it should be right-biased.
       //
       // The * syntax here is a no-fuss way to quickly construct a type with a hole. The use of it here, (C,D,*)
-      // creates a type where the hole is in the right-most
+      // creates a type where the hole is in the right-most argument.
       //
       implicit def functorForTuple3[C, D] = new Functor[(C, D, *)] {
         def map[A, B](fa: (C, D, A))(f: A => B): (C, D, B) = ___
@@ -141,8 +142,11 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
       (1, 2, 4).map(f compose g) mustBe ((1, 2, 4).map(f).map(g))
     }
 
+    /**
+      * Functors are most straight-forward to write for data structures, which actually contain values to be mapped over.
+      */
     they("can implement their own Functor typeclasses for new data structures") {
-      sealed trait Tree[A]
+      sealed trait Tree[A] // an internal binary tree
       case class Leaf[A](a: A)                                extends Tree[A]
       case class Node[A](left: Tree[A], right: Tree[A], a: A) extends Tree[A]
 
@@ -153,17 +157,32 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
       tree.map(_ + 13) mustBe (Node(Node(Leaf(14), Leaf(16), 15), Leaf(18), 17))
     }
 
-    // Technically, the concept of a 'type-container' is not quite correct. Functors can be
-    // written for any type which will follow the laws, including functions (which we don't
-    // think of as 'containers').
+    /**
+      * Functors can also be written for functions.
+      */
     they("understand that Functors can be created for function types") {
-      // Since a function is a first-class type in Scala,
-      implicit def functorForFunction[C]: Functor[C => *] = new Functor[C => *] {
-        def map[A, B](fa: C => A)(f: A => B): C => B = ___
-      }
+      // Since a function is a first-class type in Scala, there's no reason we can't have a functor for it.
+      implicit def functorForFunction[C]: Functor[C => *] =
+        new Functor[C => *] { // C => * is a function type with a hole
+          def map[A, B](fa: C => A)(f: A => B): C => B = ___
+        }
 
       val f = (a: Int) => a + 3
-      val g = (b: Int) => Functor[Int => *].map(f)(_.toString + "!") // we use Functor[Int => *] here is provided by the functor instance above.
+      val g = (b: Int) => Functor[Int => *].map(f)(_.toString + "!") // the Functor[Int => *] summoned here is provided by the functor instance above.
+
+      g(1) mustBe (___)
+    }
+
+    they("understand that there's more than one way to Functor a function") {
+      // When the hole is in the argument, there's another way to write a Functor for function.
+      // Since a function is a first-class type in Scala, there's no reason we can't have a functor for it.
+      implicit def functorForFunction[C]: Functor[* => C] = // TODO: is this lawful?
+        new Functor[* => C] { // * => C is a function type with a hole
+          def map[A, B](fa: A => C)(f: A => B): B => C = ___
+        }
+
+      val f = (a: Int) => a + 3
+      val g = (b: Int) => Functor[Int => *].map(f)(_.toString + "!") // the Functor[Int => *] summoned here is provided by the functor instance above.
 
       g(1) mustBe (___)
     }
