@@ -264,7 +264,7 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * To prove it, we just need to provide a lawful instance of Functor[F[_]] for every instance of a Monad[F[_]].
+      * To prove every Monad is a Functor, we just need to provide a lawful instance of Functor[F[_]] for every instance of a Monad[F[_]].
       */
     they("know that every Monad is a Functor") {
       trait SimpleMonad[F[_]] { // same typeclass from before.
@@ -285,6 +285,18 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
 
       functorForAnyMonad[Option].map(Some(1))(x => (x + 12) + "!") mustBe (Some("13!"))
       functorForAnyMonad[Option].map(None)(_ => throw new RuntimeException("should never be executed")) mustBe (None)
+
+      // Functors must preserve the identity map.
+      functorForAnyMonad[Option].map(Some(1))(identity) mustBe (Some(1))
+      functorForAnyMonad[Option].map(None)(identity) mustBe (None)
+
+      // Functors must preserve the composition of functions.
+      val a = randomInt()
+      val f = (x: Int) => x + 1
+      val g = (x: Int) => 3 * x
+
+      functorForAnyMonad[Option].map(Some(a))(f compose g) mustBe (functorForAnyMonad[Option]
+        .map(functorForAnyMonad[Option].map(Some(a))(f))(g))
     }
 
     they(
