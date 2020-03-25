@@ -2,6 +2,8 @@ package cats.koans
 
 object Util {
 
+  def randomInt(): Int = (1000 * Math.random()).toInt
+
   def ___[A]: A = ???.asInstanceOf[A]
 
   // There are too many ways not to write code in Scala

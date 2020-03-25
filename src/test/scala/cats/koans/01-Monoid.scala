@@ -34,8 +34,6 @@ class MonoidKoans_01 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     they("know the Monoid laws") {
-      def randomInt(): Int = (1000 * Math.random()).toInt
-
       val a = randomInt()
 
       // The identity for any Monoid must act as a left and right identity
@@ -89,7 +87,7 @@ class MonoidKoans_01 extends AnyFunSpec with Matchers with CancelAfterFailure {
       combineList[String](List.empty) mustEqual ("")
        */
 
-      fail("Comment out this line and remove comments from above")
+      fail("Comment or remove this line and remove comments from above")
     }
 
     they("understand how to read and use the Monoids implemented by others") {

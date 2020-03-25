@@ -58,3 +58,5 @@ sbt:cats-koans> test
   * composition of A => F[B], B => F[C]
   * Functor plus flatMap
   * List 
+  * Understand that Monads do :not: compose
+  * 

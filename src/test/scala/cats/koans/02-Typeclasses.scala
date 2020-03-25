@@ -40,9 +40,9 @@ class TypeclassKoans_02 extends AnyFunSpec with Matchers with CancelAfterFailure
         list.fold(summonedInstance.empty)(summonedInstance.combine)
       }
 
-      // at the callsite, an implicit instance of SimpleMonoid[A] must be available
       implicit val monoidForString: SimpleMonoid[String] = ___
 
+      // at the call-site, an implicit instance of SimpleMonoid[A] (above) must be available
       combineAll(List("a", "b", "c")) mustBe ("abc")
 
       // If no typeclass is available at the callsite, compilation will fail with a warning like
