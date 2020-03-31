@@ -73,8 +73,8 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       def divide(x: Int, y: String): Either[String, Int] =
         Either
           .fromOption(y.toIntOption, "notnum")
-          .flatMap(___)                   // use flatMap here to return a Left("div0") in case y is zero
-          .map((safeY: Int) => x / safeY) // divide x by y
+          .flatMap(___)
+          .map((safeY: Int) => x / safeY) // fearlessly divide x by y
 
       divide(1, "0") mustBe (Left("div0"))
       divide(12, "2") mustBe (Right(6))
@@ -91,7 +91,7 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
 
       def divideExcitingNumbers(excitingNumber1: String, excitingNumber2: String): Option[Double] =
         toBoringNumber(excitingNumber2)
-          .flatMap(___) // guard against division by zero in one flatMap and perform the division in the other
+          .flatMap(___)
           .flatMap(___)
 
       divideExcitingNumbers("16!!!", "4!") mustBe (Some(4.0))
@@ -112,9 +112,9 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       def passwordIsCorrect(username: String, plaintext: String): Either[String, Boolean] =
         Either
           .right(username)
-          .flatMap(username => ___) // retrieve uid or Left("no_uid")
-          .flatMap(uid => ___)      // retrieve ciphertext or Left("no_pwd")
-          .map(ciphertext => ___)   // compare ciphertext to plaintext
+          .flatMap(username => ___)
+          .flatMap(uid => ___)
+          .map(ciphertext => ___)
 
       passwordIsCorrect("Alex", "best-password!") mustBe (Right(true))
       passwordIsCorrect("Ryan", "super-secret-password") mustBe (Right(false))
@@ -126,11 +126,11 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       *   when F[_] = List[_]      the complication is that there might be zero or zillions of values for the type.
       */
     they("understand how to use the List monad to handle the effect of arbitrarily many values") {
-      "abcd".toList                                // convert to a list of characters
-        .map(___)                                  // convert each character to a string
-        .flatMap(___)                              // double each letter in the string
-        .flatMap(___) mustBe                       // do something else ;)
-        (List("a!", "a!", "b!", "b!", "c!", "c!")) // no d's in the response
+      "abcd".toList
+        .map(___)
+        .flatMap(___)
+        .flatMap(___) mustBe
+        (List("a!", "a!", "b!", "b!", "c!", "c!"))
     }
 
     /**
@@ -167,12 +167,12 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       def passwordIsCorrect(username: String, plaintext: String): Either[String, Boolean] =
         ___ // copy answer from koan above
 
-      // forComp implements the same program as passwordIsCorrect. Notice how the variable names line up with the stubbed out version above.
+      // forComp implements the same program as passwordIsCorrect. The variable names line up with the stubbed out version above.
       def forComp(username: String, plaintext: String) =
         for {
           username   <- Either.right(username)
-          uid        <- ___[Either[String, Int]] // retrieve uid or Left("no_uid")
-          ciphertext <- ___[Either[String, String]] // retrieve ciphertext or Left("no_pwd")
+          uid        <- ___[Either[String, Int]]
+          ciphertext <- ___[Either[String, String]]
         } yield hash(plaintext) == ciphertext
 
       passwordIsCorrect("Alex", "best-password!") mustBe (forComp("Alex", "best-password!"))
@@ -186,8 +186,8 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       */
     they("know how pure works to lift values into Monadic contexts") {
       // cats provides a few ways to invoke pure.
-      val y = Monad[Option].pure(2) // the hard way
-      val x = 1.pure[Option]        // the easy way
+      val y = Monad[Option].pure(2) // the noisy way
+      val x = 1.pure[Option]        // the easy way (requires import cats.implicits._)
 
       x mustBe (Some(1))
       y mustBe (Some(2))
@@ -213,8 +213,6 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
         def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
       }
 
-      // Every Monad has to satisfy the laws but for simple monads there's really only one way to get it right. Focus on making
-      // the types line up.
       val monadForOption: SimpleMonad[Option] = new SimpleMonad[Option] {
         def pure[A](a: A): Option[A]                                   = ___
         def flatMap[A, B](fa: Option[A])(f: A => Option[B]): Option[B] = ___
@@ -227,18 +225,16 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       // f is a Kleisli arrow from Int => Option[String]
       val f: Int => Option[String] = (x) => Some(x + "!")
 
-      // pure acts as the left identity for flatMap. That is to say, wrapping up a value using pure and then applying a Kleisli
-      // arrow must be the same as applying that Kleisli arrow
+      // pure acts as the left identity for flatMap.
       mfo.flatMap(mfo.pure(a))(x => Some(x + 2)) mustBe f(a)
 
-      // pure also acts as the right identity for flatMap. That is to say, applying a Kleisli arrow and then using pure as the second argument
-      // to flat map yields the same value as applying the Kleisli
+      // pure also acts as the right identity for flatMap.
       mfo.flatMap(f(a))(mfo.pure) mustBe f(a)
 
       // g is a Kleisli arrow from String => Option[Int]
       val g: String => Option[Int] = (s) => s.substring(0, s.length() - 1).toIntOption
 
-      // flatMap must compose in an associative way.
+      // flatMap must compose in an associative way... that is..
       mfo.flatMap(                                 // it doesn't matter how flatMaps nest,
         mfo.flatMap(Some(1))(f)                    // flatMap with f first
       )(g) mustBe (                                // and then flatMap with g ...or
@@ -247,15 +243,13 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * One example about getting functionality for cheap is the fact that a lawful map operation can be implemented using only flatMap and pure.
-      * By implementing the Monad, we get a Functor 'for-free'.
+      * A lawful map operation can be implemented using only flatMap and pure. By implementing the Monad, we get a Functor 'for-free'.
       */
     they("know that map can be implemented in terms of flatMap and pure") {
       trait SimpleMonad[F[_]] { // same typeclass from before.
         def pure[A](a: A): F[A]
         def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
 
-        // implement a lawful map operation using only flatMap and pure. (follow the types).
         def map[A, B](fa: F[A])(f: A => B): F[B] = ___
       }
 
@@ -272,21 +266,21 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       * To prove every Monad is a Functor, we just need to provide a lawful instance of Functor[F[_]] for every instance of a Monad[F[_]].
       */
     they("know that every Monad is a Functor") {
-      trait SimpleMonad[F[_]] { // same typeclass from before (sans map)
+      trait SimpleMonad[F[_]] {
         def pure[A](a: A): F[A]
         def flatMap[A, B](fa: F[A])(f: A => F[B]): F[B]
       }
 
-      trait SimpleFunctor[F[_]] { // same typeclass from module 2
+      trait SimpleFunctor[F[_]] {
         def map[A, B](fa: F[A])(f: A => B): F[B]
       }
 
       // the below function defines an instance of SimpleFunctor for any F[_] which has a implicit SimpleMonad[F]
-      def functorForAnyMonad[F[_]: Monad]: SimpleFunctor[F] = new SimpleFunctor[F] {
+      def functorForAnyMonad[F[_]: SimpleMonad]: SimpleFunctor[F] = new SimpleFunctor[F] {
         def map[A, B](fa: F[A])(f: A => B): F[B] = ___
       }
 
-      val monadForOption: SimpleMonad[Option] = ___ // TODO: copy your lawful monad from above.
+      implicit val monadForOption: SimpleMonad[Option] = ___ // TODO: copy your lawful monad from above.
 
       functorForAnyMonad[Option].map(Some(1))(x => (x + 12) + "!") mustBe (Some("13!"))
       functorForAnyMonad[Option].map(None)(_ => throw new RuntimeException("should never be executed")) mustBe (None)
@@ -320,15 +314,14 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
     }
 
     /**
-      * Because every Monad is a Functor, Monads compose with Functors. The result is not a Monad, though, it's just a Functor.
-      * if F[_] is a monad, and G[_] is a functor, then F[G[_]] is also a Functor.
+      * If F[_] is a monad, and G[_] is a functor, then F[G[_]] is also a functor (but not necessarily a Monad).
       *
       * Monads do not compose with Monads in general. Monads do compose with Monad Transformers which we'll see later.
       */
     they("understand that Monad composition does not work in general") {
-      // think about how you might complete the definition for flatMap below.
+      // try to complete the definition for flatMap below.
       def flatMap[F[_]: Monad, G[_]: Monad, A, B](fa: F[G[A]])(f: A => F[G[B]]): F[G[B]] = {
-        ___ // no implementation is possible, but you should give it a shot anyway.
+        ___
       }
 
       flatMap(List(Some(1), Some(2)).widen[Option[Int]])(x => List(Some(x), None)) mustBe
@@ -346,7 +339,7 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
         def map[A, B](fa: F[A])(f: A => B): F[B] // you have to provide map, since we don't have a pure, we can't define it for you.
       }
 
-      // we can implement FlatMap for Map[K, *].
+      // we can implement FlatMap for Map[K, *]
       def flatMapForMap[K]: SimpleFlatMap[Map[K, *]] = ___
 
       flatMapForMap[Int].map(Map(1     -> 2, 3 -> 4))(_ + 1) mustBe (Map(1 -> 3, 3 -> 5))

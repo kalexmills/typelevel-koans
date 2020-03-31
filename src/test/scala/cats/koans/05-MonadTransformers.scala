@@ -7,11 +7,36 @@ import org.scalatest.matchers.must.Matchers
 import org.scalatest.CancelAfterFailure
 import Util._
 
+import cats.data.OptionT
+
 /**
   * Monads don't compose in general, but MonadTransformers do.
   */
 class MonadTransformerKoans_05 extends AnyFunSpec with Matchers with CancelAfterFailure {
   describe("Monad Transformer Masters") {
+
+    /**
+      * Monad transformers allow multiple monadic effects to be applied in a stack
+      */
+    they("understand that Monad transformers allow stacking effects") {
+      val letterList: List[Option[String]] = List(Some("a"), Some("b"), None, Some("c"))
+      val numberList: List[Option[Int]]    = List(Some(1), None, Some(2))
+
+      def stackWrap[A](l: List[Option[A]]): OptionT[List, A] = ___
+
+      val pairList = for {
+        x: String <- stackWrap(letterList)
+        y: Int    <- stackWrap(numberList)
+      } yield (x, y)
+
+      // format: off
+      pairList mustBe (List(Some(("a", 1)), None, Some(("a", 2)), 
+                            Some(("b", 1)), None, Some(("b", 2)), 
+                            None, 
+                            Some(("c", 1)), None, Some(("c", 2))
+                      ))
+      // format: on
+    }
 
     /**
       * If F[_] and G[_] are Monads, then F[G[_]] is usually also a Monad, but there's no way to automatically create a Monad instance for

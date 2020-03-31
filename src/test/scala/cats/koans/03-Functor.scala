@@ -33,9 +33,9 @@ class FunctorKoans_03 extends AnyFunSpec with Matchers with CancelAfterFailure {
     // inside a container via composition. Said another way, it allows you to thread function composition through a type.
     they("can use map to compose multiple functions acting on values in a Functor") {
       List(1, 2, 3, 4, 5)
-        .map(___)        // do something
-        .map(___)        // convert to string
-        .map(___) mustBe // do something else
+        .map(___)
+        .map(_.toString)
+        .map(___) mustBe
         (List("111!", "222!", "333!", "444!", "555!"))
     }
 
