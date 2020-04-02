@@ -27,36 +27,34 @@ Run all tests in this repository (not recommended usually)
 sbt:cats-koans> test
 ```
 
+#### Ready for Testing
+
+The below modules are ready for testing. Please open a ticket for any issues.
+
+* **Alpha Testing** `Monoid`, `Typeclasses`, `Functor` `Monad`
+
 #### Roadmap:
 
-1. Semigroup and Monoid
-  * use the Monoid instance for Int, String directly
-  * use the Monoid instance for Int, String via syntax imports
-  * use a generic function requiring the Monoid trait on a type argument
-  * write a generic function requiring the Monoid trait on its type argument
-  * define and use a reverse Semigroup instance for cats.data.NonEmptyList
-  * define and use a multiplicative Monoid instance for Double
-2. Typeclasses in Scala via Implicits
-  * Explain type-constructors
-  * Explain and use type-bounds
-  * Demonstrate where implicit typeclasses should be defined
-  * Demonstrate summoners.
-  * Demonstrate a new typeclass Reversable[A]
-  * Demonstrate PML (Pimp My Library) via implicit conversions
-3. Functor
-  * Option
-  * List
-  * Either[A, B] as a right-biased Functor
-  * implement Functor for a Tuple2
-  * implement Functor for a Tree
-  * Functors compose
-  * function types can have a Functor instance defined.
-  * Functor laws -- map and pure must play nicely together
-  * Functor trait bounds on a generic def. Introducing F[_]
-5. Monad
-  * composition of A => B, B => C
-  * composition of A => F[B], B => F[C]
-  * Functor plus flatMap
-  * List 
-  * Understand that Monads do :not: compose
-  * 
+5. Monad Transformers
+  1. More effect stacks. EitherT
+
+
+
+6. Effects and IO
+  1. Understand that referential transparency aids local reasoning
+  2. Know that allocating memory is an effect
+  3. Know that modifying memory is an effect
+  4. Know that randomness and system calls rely on mutable memory (and so are effects)
+  5. Can control effects by writing effectful functions
+  6. Appreciate the need for a common effect powerful enough to handle arbitrary side-effects.
+  7. Know to use a general-purpose 'computation monad' like IO to wrap effects.
+  8. Understand how to use IO to suspend execution of code
+
+
+
+7. Bracket
+  1. Understand the use of try-finally
+  2. 
+
+
+6. Semigroupal -- computations when order doesn't matter

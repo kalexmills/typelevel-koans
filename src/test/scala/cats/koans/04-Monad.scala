@@ -138,11 +138,11 @@ class MonadKoans_04 extends AnyFunSpec with Matchers with CancelAfterFailure {
       * Monads and other typeclasses.
       *
       *   when F[_] = Eval[_]      the complication is that the value might be computed lazily.
-      *   when F[_] = Future[_]    the complication is that you might have to wait to get your value (and lots can go wrong)
+      *   when F[_] = Future[_]    the complication is that you might have to wait to get your value (and lots can go wrong).
       *   when F[_] = Reader[_]    the complication is that you need to provide some other value in order for your value to be computed.
       *   when F[_] = Writer[_]    the complication is that the computation is carrying along an additional value being written to (e.g. logs).
       *   when F[_] = IO[_]        the complication is that to get your value, you have to run an arbitrarily complex program which may
-      *                            involve concurrency, system-level calls, and potential interaction with other systems.
+      *                            involve concurrency, system-level calls, and (potentially) interaction with other systems.
       */
     /**
       * flatMap can be defined as the composition of two other combinators, map and flatten.
