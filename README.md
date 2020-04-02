@@ -31,30 +31,26 @@ sbt:cats-koans> test
 
 The below modules are ready for testing. Please open a ticket for any issues.
 
-* **Alpha Testing** `Monoid`, `Typeclasses`, `Functor` `Monad`
+* **Alpha Testing** [`Monoid`](https://github.com/kalexmills/typelevel-koans/blob/master/src/test/scala/cats/koans/01-Monoid.scala), [`Typeclasses`](https://github.com/kalexmills/typelevel-koans/blob/master/src/test/scala/cats/koans/02-Typeclasses.scala), [`Functor`](https://github.com/kalexmills/typelevel-koans/blob/master/src/test/scala/cats/koans/03-Functor.scala), [`Monad`](https://github.com/kalexmills/typelevel-koans/blob/master/src/test/scala/cats/koans/04-Monad.scala)
 
 #### Roadmap:
 
 5. Monad Transformers
-  1. More effect stacks. EitherT
-
-
+    * can reason about the effect of combined flatMap operations
+    * can compose multiple transformers to create arbitrarily nested stacks
 
 6. Effects and IO
-  1. Understand that referential transparency aids local reasoning
-  2. Know that allocating memory is an effect
-  3. Know that modifying memory is an effect
-  4. Know that randomness and system calls rely on mutable memory (and so are effects)
-  5. Can control effects by writing effectful functions
-  6. Appreciate the need for a common effect powerful enough to handle arbitrary side-effects.
-  7. Know to use a general-purpose 'computation monad' like IO to wrap effects.
-  8. Understand how to use IO to suspend execution of code
-
-
+    * Understand that referential transparency aids local reasoning
+    * Know that allocating memory is an effect
+    * Know that modifying memory is an effect
+    * Know that randomness and system calls rely on mutable memory (and so are effects)
+    * Can control effects by writing effectful functions
+    * Appreciate the need for a common effect powerful enough to handle arbitrary side-effects.
+    * Know to use a general-purpose 'computation monad' like IO to wrap effects.
+    * Understand how to use IO to suspend execution of code
 
 7. Bracket
-  1. Understand the use of try-finally
-  2. 
-
-
-6. Semigroupal -- computations when order doesn't matter
+    * Can use bracket as a pure replacement for tryFinally
+    * Understand ExitCase
+    
+8. Semigroupal -- computations when order doesn't matter
